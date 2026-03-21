@@ -7,7 +7,7 @@
     
     USAGE EXAMPLE:
     
-    local NexusUI = loadstring(game:HttpGet("URL_HERE"))()
+    local NexusUI = loadstring(game:HttpGet(""))()
     
     local Window = NexusUI:CreateWindow({
         Title = "My Script",
