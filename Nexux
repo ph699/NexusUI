@@ -1,0 +1,120 @@
+local Library = {}
+
+local UIS = game:GetService("UserInputService")
+
+-- GUI base
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local Main = Instance.new("Frame", ScreenGui)
+local Tabs = Instance.new("Frame", Main)
+local Content = Instance.new("Frame", Main)
+
+Main.Size = UDim2.new(0, 500, 0, 300)
+Main.Position = UDim2.new(0.5, -250, 0.5, -150)
+Main.BackgroundColor3 = Color3.fromRGB(15,15,15)
+Main.Active = true
+Main.Draggable = true
+
+Tabs.Size = UDim2.new(0, 120, 1, 0)
+Tabs.BackgroundColor3 = Color3.fromRGB(20,20,20)
+
+Content.Size = UDim2.new(1, -120, 1, 0)
+Content.Position = UDim2.new(0, 120, 0, 0)
+Content.BackgroundColor3 = Color3.fromRGB(25,25,25)
+
+local TabLayout = Instance.new("UIListLayout", Tabs)
+
+local CurrentTab = nil
+
+function Library:CreateTab(name)
+    local Button = Instance.new("TextButton", Tabs)
+    Button.Size = UDim2.new(1, 0, 0, 40)
+    Button.Text = name
+    Button.BackgroundColor3 = Color3.fromRGB(30,30,30)
+
+    local Frame = Instance.new("Frame", Content)
+    Frame.Size = UDim2.new(1, 0, 1, 0)
+    Frame.Visible = false
+
+    local Layout = Instance.new("UIListLayout", Frame)
+
+    Button.MouseButton1Click:Connect(function()
+        if CurrentTab then
+            CurrentTab.Visible = false
+        end
+        Frame.Visible = true
+        CurrentTab = Frame
+    end)
+
+    return Frame
+end
+
+function Library:Button(parent, text, callback)
+    local Btn = Instance.new("TextButton", parent)
+    Btn.Size = UDim2.new(1, -10, 0, 40)
+    Btn.Text = text
+    Btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+
+    Btn.MouseButton1Click:Connect(callback)
+end
+
+function Library:Toggle(parent, text, callback)
+    local Toggle = Instance.new("TextButton", parent)
+    Toggle.Size = UDim2.new(1, -10, 0, 40)
+    Toggle.Text = text .. " [OFF]"
+    Toggle.BackgroundColor3 = Color3.fromRGB(40,40,40)
+
+    local state = false
+
+    Toggle.MouseButton1Click:Connect(function()
+        state = not state
+        Toggle.Text = text .. (state and " [ON]" or " [OFF]")
+        callback(state)
+    end)
+end
+
+function Library:Slider(parent, text, min, max, callback)
+    local Frame = Instance.new("Frame", parent)
+    Frame.Size = UDim2.new(1, -10, 0, 50)
+    Frame.BackgroundColor3 = Color3.fromRGB(40,40,40)
+
+    local Label = Instance.new("TextLabel", Frame)
+    Label.Size = UDim2.new(1, 0, 0, 20)
+    Label.Text = text .. ": " .. min
+    Label.BackgroundTransparency = 1
+
+    local Bar = Instance.new("Frame", Frame)
+    Bar.Size = UDim2.new(1, -20, 0, 10)
+    Bar.Position = UDim2.new(0, 10, 0, 30)
+    Bar.BackgroundColor3 = Color3.fromRGB(60,60,60)
+
+    local Fill = Instance.new("Frame", Bar)
+    Fill.Size = UDim2.new(0, 0, 1, 0)
+    Fill.BackgroundColor3 = Color3.fromRGB(0,255,100)
+
+    local dragging = false
+
+    Bar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+        end
+    end)
+
+    Bar.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+
+    UIS.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local pos = math.clamp((input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
+            Fill.Size = UDim2.new(pos, 0, 1, 0)
+
+            local value = math.floor(min + (max - min) * pos)
+            Label.Text = text .. ": " .. value
+            callback(value)
+        end
+    end)
+end
+
+return Library
